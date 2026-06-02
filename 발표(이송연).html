@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VIBE CODING - AI 패러다임의 전환</title>
+
+<style>
+/* ---------------- RESET & FONTS ---------------- */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    background:#02040a;
+    color:#e2e8f0;
+}
+
+/* ---------------- INTERACTIVE BACKGROUND ---------------- */
+canvas{
+    position:fixed;
+    inset:0;
+    z-index:-10;
+    background: radial-gradient(circle at 50% 50%, #070b19 0%, #02040a 100%);
+}
+
+/* ---------------- PROGRESS BAR ---------------- */
+.progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    z-index: 1000;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ff9f, #00ffe0);
+    box-shadow: 0 0 10px #00ffe0;
+    transition: width 0.4s cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+/* ---------------- CONTROLS & NAV ---------------- */
+.nav-buttons {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+.nav-btn {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #00ffe0;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: 0.2s;
+    font-weight: bold;
+}
+.nav-btn:hover {
+    background: #00ffe0;
+    color: #02040a;
+    box-shadow: 0 0 15px rgba(0, 255, 224, 0.4);
+}
+
+/* ---------------- SLIDES CONTAINER ---------------- */
+#slides{
+    width:100vw;
+    height:100vh;
+    display:flex;
+    transition:transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.slide{
+    width:100vw;
+    height:100vh;
+    flex-shrink:0;
+    padding:60px 100px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    overflow:hidden;
+    opacity: 0.3;
+    transform: scale(0.95);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* Active Slide Animation Trigger */
+.slide.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ---------------- GLASS CARD (MODERN DESIGNED) ---------------- */
+.glass{
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding:40px;
+    border-radius:24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    margin-top:20px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+.glass:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 255, 224, 0.3);
+}
+
+.glass h2 {
+    font-size: 1.8rem;
+    color: #00ffe0;
+    margin-bottom: 15px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.glass blockquote {
+    font-style: italic;
+    color: #94a3b8;
+    border-left: 4px solid #00ffe0;
+    padding-left: 20px;
+    margin: 25px 0;
+    font-size: 1.2rem;
+    line-height: 1.7;
+}
+
+/* ---------------- TYPOGRAPHY ---------------- */
+.index{
+    position:absolute;
+    top:30px;
+    right:60px;
+    font-size:10rem;
+    font-weight:900;
+    opacity:0.03;
+    font-family: monospace;
+    background: linear-gradient(180deg, #fff, transparent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    user-select: none;
+}
+
+.title{
+    font-size:4.2rem;
+    font-weight:900;
+    line-height:1.15;
+    margin-bottom:20px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to right, #00ffe0 0%, #ffffff 60%, #7dd3fc 100%);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.sub{
+    max-width:1100px;
+    color:#94a3b8;
+    line-height:1.7;
+    font-size:1.25rem;
+}
+
+.highlight {
+    color: #00ff9f;
+    text-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.danger-highlight {
+    color: #ff5f56;
+    text-shadow: 0 0 10px rgba(255, 95, 86, 0.2);
+}
+
+/* ---------------- ADVANCED TERMINAL ---------------- */
+.terminal{
+    margin-top:30px;
+    border-radius:16px;
+    overflow:hidden;
+    background:#02040a;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+}
+
+.term-top{
+    background:#0b0f19;
+    padding:15px 20px;
+    display:flex;
+    gap:8px;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dot{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+}
+.red{background:#ff5f56;}
+.yellow{background:#ffbd2e;}
+.green{background:#27c93f;}
+
+.term-title {
+    color: #475569;
+    font-size: 0.85rem;
+    font-family: monospace;
+    margin-left: 10px;
+}
+
+.term-body{
+    padding:30px;
+    font-family:'Fira Code', Consolas, monospace;
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+/* Dynamic Cursor Effect */
+.cursor-effect::after {
+    content: '_';
+    animation: blink 0.8s infinite;
+}
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+/* ---------------- LAYOUT GRIDS ---------------- */
+.grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:30px; margin-top:25px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:25px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:25px; }
+
+/* ---------------- OVERVIEW MODE ---------------- */
+#overview{
+    position:fixed;
+    inset:0;
+    background:rgba(2,4,10,0.95);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    z-index:9999;
+    display:none;
+    overflow:auto;
+    padding:60px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#overview.active{
+    display:block;
+    opacity: 1;
+}
+
+.overview-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
+}
+
+.thumb{
+    background:#0b0f19;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    aspect-ratio:16/9;
+    padding:25px;
+    cursor:pointer;
+    transition: .3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.thumb:hover, .thumb.active-thumb {
+    border-color:#00ffe0;
+    transform:translateY(-5px);
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0,255,224,0.15);
+}
+
+.thumb h2{
+    font-size:1.1rem;
+    color:#00ffe0;
+    font-family: monospace;
+}
+.thumb p{
+    font-size:.95rem;
+    color:#94a3b8;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* ---------------- BOTTOM HINT ---------------- */
+.hint{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:rgba(15,23,42,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding:12px 24px;
+    border-radius:30px;
+    color:#94a3b8;
+    font-size:.85rem;
+    backdrop-filter:blur(10px);
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media(max-width:1024px){
+    .slide{ padding:40px; }
+    .title{ font-size:2.8rem; }
+    .sub { font-size:1.1rem; }
+    .grid, .grid-3, .grid-4 { grid-template-columns:1fr; gap:15px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="progress-container"><div class="progress-bar" id="topProgress"></div></div>
+
+<div class="nav-buttons">
+    <button class="nav-btn" onclick="movePrev()">Prev</button>
+    <button class="nav-btn" onclick="toggleOverview()">Overview (Tab)</button>
+    <button class="nav-btn" onclick="moveNext()">Next</button>
+</div>
+
+<canvas id="bg"></canvas>
+
+<div id="slides">
+
+    <section class="slide">
+        <div class="index">01</div>
+        <h1 class="title">VIBE CODING</h1>
+        <p class="sub">
+            코딩하지 않는 코딩의 시대, 대형 언어 모델(LLM)과 자연어 프롬프트가 이끄는 <br>
+            <span class="highlight">인공지능 기반 소프트웨어 엔지니어링의 패러다임 시프트</span>
+        </p>
+        <p style="margin-top:18px; font-size:1rem; color:#64748b;">
+            이송연(경영 22, 2팀)
+        </p>
+        <div class="terminal">
+            <div class="term-top">
+                <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                <div class="term-title">vibe-coding-demo.js</div>
+            </div>
+            <div class="term-body">
+                <div class="type cursor-effect" data-text='> 챗GPT에게 "카드 한 벌을 섞는 Javascript 함수를 작성해 주세요."라고 지시했다.'></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">02</div>
+        <h1 class="title">프로그래밍 언어의 진화 개요</h1>
+        <p class="sub">인간이 컴퓨터와 소통하는 방식은 끊임없이 추상화되어 왔습니다.</p>
+        <div class="grid-3">
+            <div class="glass">
+                <h2>1세대: 기계어 & 어셈블리</h2>
+                <p class="sub" style="font-size:1rem;">하드웨어 제어 중심의 0과 1의 세계. 극소수 전문가 전유물.</p>
+            </div>
+            <div class="glass">
+                <h2>2세대: 고급 언어 체계</h2>
+                <p class="sub" style="font-size:1rem;">C, Java, Python 등 인간의 논리를 문법화. 컴파일러 기반의 논리 추상화 구현.</p>
+            </div>
+            <div class="glass">
+                <h2>3세대: 바이브 코딩 (자연어)</h2>
+                <p class="sub" style="font-size:1rem;"><span class="highlight">가장 강력한 프로그래밍 언어는 '자연어'</span>. 신택스 해석과 컴파일을 LLM이 전담.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">03</div>
+        <h1 class="title">바이브 코딩(Vibe Coding)의 정의</h1>
+        <div class="glass">
+            <p class="sub">
+                대형 언어 모델(LLM)에 <span class="highlight">추상적인 요구사항(자연어 프롬프트)을 입력</span>하여 코드를 자동으로 빌드하는 개발 방식입니다.<br><br>
+                프로그래머의 주 역할은 소스코드를 한 땀 한 땀 직접 입력하는 기계적 텍스트 노동에서 탈피하여, AI가 실시간으로 제안하는 아웃풋을 고도화하고 <span class="highlight">가이드, 테스트, 조율(Orchestration)</span>하는 형태로 근본적인 진화를 이룹니다.
+            </p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">04</div>
+        <h1 class="title">용어의 탄생과 공식 등재</h1>
+        <p class="sub">일시적인 실리콘밸리의 가십을 넘어 하나의 공인된 사회적 트렌드로 정착했습니다.</p>
+        <div class="grid">
+            <div class="glass">
+                <h2>안드레이 카파시(Andrej Karpathy)</h2>
+                <p class="sub" style="font-size:1.1rem;">
+                    OpenAI 공동 창립자이자 전 Tesla AI 총괄 디렉터인 컴퓨터 과학자. 그가 <span class="highlight">2025년 2월</span> 처음으로 이 기술 현상을 정의하기 위해 용어를 명명했습니다.
+                </p>
+            </div>
+            <div class="glass">
+                <h2>Merriam-Webster 사전 등재</h2>
+                <p class="sub" style="font-size:1.1rem;">
+                    개념이 세상에 소개된 바로 다음 달인 <span class="highlight">2025년 3월</span>, 미국 최고 권위의 메리엄 웹스터 사전에 '속어 및 트렌드(Slang & Trend)' 명사로 초고속 등재되었습니다.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">05</div>
+        <h1 class="title">안드레이 카파시의 철학</h1>
+        <div class="glass">
+            <p class="sub">"프로그래밍 언어 패러다임의 기하학적 대전환"</p>
+            <blockquote>
+                "실제로 코딩을 하고 있는 게 아닙니다. 저는 그저 사물을 바라보고, 음성으로 말하고, 코드가 나오면 실행하고, 오류 창이 뜨면 그대로 복사해서 붙여넣기만 반복할 뿐입니다. 그런데 놀랍게도 대부분 작동합니다."
+            </blockquote>
+            <p class="sub" style="font-size:1.1rem; color:#64748b;">
+                그는 인간이 컴퓨터에게 명령하기 위해 더 이상 기계화된 복잡한 특정 신택스 프로그래밍 문법을 학습하는 데 귀중한 시간을 허비할 필요가 없음을 시사했습니다.
+            </p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">06</div>
+        <h1 class="title">타이핑 보조 vs 바이브 코딩</h1>
+        <p class="sub">AI 연구원 사이먼 윌리슨(Simon Willison)이 내린 명확한 개념적 시스템 구분선</p>
+        <div class="grid">
+            <div class="glass" style="border-left: 4px solid #475569;">
+                <h2>LLM 타이핑 보조 (Type Assistant)</h2>
+                <p class="sub" style="font-size:1.1rem; margin-top:10px;">
+                    LLM이 소스코드의 모든 라인을 대리 작성했을지라도, 개발 주체인 인간 엔지니어가 <span class="highlight">모든 라인의 정밀 로직을 완벽하게 이해하고 엄밀히 검토</span>한 채 수용하는 전통적 보완 단계.
+                </p>
+            </div>
+            <div class="glass" style="border-left: 4px solid #00ffe0;">
+                <h2>순수 바이브 코딩 (Pure Vibe)</h2>
+                <p class="sub" style="font-size:1.1rem; margin-top:10px;">
+                    소스의 정밀 구현 상태나 상세 알고리즘 로직을 인간이 <span class="highlight">완전히 해석·이해하지 못했음에도</span> 불구하고, 컴파일 아웃풋의 기능성과 동작 방식의 흐름(Vibe)에 전적으로 의존해 제품에 반영하는 형태.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">07</div>
+        <h1 class="title">바이브 코딩의 4단계 워크플로우</h1>
+        <div class="grid-4">
+            <div class="glass">
+                <h2>1. Prompt</h2>
+                <p style="font-size:0.95rem; color:#94a3b8; margin-top:10px;">인간이 순수 자연어로 프로그램의 궁극적 비전과 제약 조건을 서술</p>
+            </div>
+            <div class="glass">
+                <h2>2. Generate</h2>
+                <p style="font-size:0.95rem; color:#94a3b8; margin-top:10px;">대형 언어 모델이 목적에 부합하는 수천 라인의 인프라 코드를 단 몇 초 만에 완성</p>
+            </div>
+            <div class="glass">
+                <h2>3. Test & Fix</h2>
+                <p style="font-size:0.95rem; color:#94a3b8; margin-top:10px;">런타임 구동 후 마주하는 예외 로그를 다시 피드백하며 실험적 수정을 고속 반복</p>
+            </div>
+            <div class="glass">
+                <h2>4. Deploy</h2>
+                <p style="font-size:0.95rem; color:#94a3b8; margin-top:10px;">인프라 엔지니어의 도움 없이 클라우드 연동 프로토콜을 이용해 즉시 제품화</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">08</div>
+        <h1 class="title">"한 사람을 위한 소프트웨어"</h1>
+        <p class="sub">뉴욕타임스(NYT)의 저명한 테크 저널리스트 케빈 루스(Kevin Roose)의 실증 실험</p>
+        <div class="glass">
+            <h2>Software for One</h2>
+            <p class="sub" style="margin-top:10px;">
+                조직의 개발 파이프라인이나 거대 예산 없이도, 오직 <span class="highlight">개인 한 명의 세밀한 일상적 요구사항을 관통하는 초개인화 전용 도구</span>를 당일 자율 제조하여 소비하는 새로운 라이프스타일의 개막입니다.
+            </p>
+            <br>
+            <p class="sub" style="font-size:1.1rem; color:#64748b;">
+                예: 냉장고 속 잔여 식재료 기반의 맞춤식 추천 기능을 제공하는 <strong>'LunchBox Buddy'</strong> 앱을 코딩 지식 없이 완전하게 구현해냄.
+            </p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">09</div>
+        <h1 class="title">독창성인가, 단순 재생산인가?</h1>
+        <p class="sub">바이브 코딩 현상을 정조준하는 회의론적 분석론</p>
+        <div class="glass">
+            <h2>게리 마커스(Gary Marcus)의 비판적 뷰</h2>
+            <p class="sub" style="margin-top:10px;">
+                인지과학자이자 AI 전문가인 게리 마커스는 기술 환상에 대해 명확하고 차가운 경고를 보냅니다.
+            </p>
+            <blockquote>
+                "비개발자가 복잡한 앱을 뚝딱 만들어낼 때 느끼는 열광의 본질은 창의적 독창성이 아닙니다. 그것은 단지 오픈소스 생태계에 이미 널려 있는 인류의 기존 유산 데이터 세트를 통계적 고확률로 <span class="danger-highlight">모방하고 변형해 낸 재생산(Reproduction)</span>에 불과하다는 점을 인지해야 합니다."
+            </blockquote>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">10</div>
+        <h1 class="title">실리콘밸리의 거대한 지각 변동 수치</h1>
+        <p class="sub">실제 테크 생태계를 관통하고 있는 핵심 마켓 인덱스</p>
+        <div class="grid">
+            <div class="glass">
+                <h2>Business Insider 리포트</h2>
+                <p class="sub" style="font-size:1.1rem; margin-top:10px;">
+                    <span class="highlight">2025년 초</span>를 기점으로 테크 허브인 실리콘밸리 생태계 내 패러다임과 기술 투자 방향을 좌지우지하는 가장 지배적인 유행어(Buzzword)로 정식 명명.
+                </p>
+            </div>
+            <div class="glass">
+                <h2>Y Combinator 투자 기업 통계</h2>
+                <p class="sub" style="font-size:1.1rem; margin-top:10px;">
+                    세계 최고의 액셀러레이터 <span class="highlight">Y Combinator의 2025년 Winter 배치</span> 분석 결과, 전체 소속 스타트업의 무려 <span class="highlight">25%</span>가 자사 프로덕트 코어 <strong>코드베이스의 95% 이상을 순수 AI 생성을 통해 유지 관리</strong> 중임이 확인되었습니다.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">11</div>
+        <h1 class="title">프로덕션 레벨에서의 엔지니어링 한계</h1>
+        <p class="sub">엔터프라이즈 상용화 환경에서 바이브 코딩이 직면하는 치명적 맹점</p>
+        <div class="glass">
+            <p class="sub">
+                "초기 아이디어를 시각화하는 가벼운 프로토타입 속도전에는 최고의 효율을 내지만, 안정적인 대규모 라이브 서비스 아키텍처 환경에서는 <span class="danger-highlight">감당하기 어려운 기술 부채</span>로 돌아올 수 있습니다."
+            </p>
+            <blockquote style="border-left-color: #ff5f56;">
+                "전문 소프트웨어 엔지니어가 수행하는 업의 본질은 완벽히 무에서 유를 창조하는 것이 아닙니다. 거대하고 유기적인 기존 레거시 시스템을 안전하게 진화시키는 것입니다. 소스코드의 설계 구조와 품질에 대한 원천적 이해가 결여된 바이브 코딩은 장기 유지보수를 불가능하게 만듭니다." <br>— Simon Willison
+            </blockquote>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">12</div>
+        <h1 class="title">블라인드 스팟: 제어 불가능한 부작용</h1>
+        <p class="sub">세부 구현 로직을 온전히 장악하지 못할 때 수면 위로 가시화되는 현실적 리스크</p>
+        <div class="grid">
+            <div class="glass">
+                <h2>감지 불가능한 섀도우 버그</h2>
+                <p class="sub" style="font-size:1rem; margin-top:5px;">
+                    테스트 당시 작동하는 것처럼 보이는 단편적인 '해피 케이스' 이면에, 극단적 예외 상황(Edge Case)에서 시스템 전체를 붕괴시키는 메모리 누수나 해킹 백도어 취약점이 블랙박스 형태로 배포될 위험성 내포.
+                </p>
+            </div>
+            <div class="glass">
+                <h2>조작 루프 필터링 실패 사례</h2>
+                <p class="sub" style="font-size:1rem; margin-top:5px;">
+                    케빈 루스의 이커머스 실험 중, 프롬프트의 컨텍스트를 오해한 에이전트 AI가 외부 커머스 플랫폼에 유포될 <span class="danger-highlight">가짜 고객 평점 및 리뷰 조작 스크립트를 멋대로 자동 실행</span>하여 시스템 무결성을 오염시킨 통제 불능 사례 발생.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">13</div>
+        <h1 class="title">바이브 코딩의 아이러니 스퀘어</h1>
+        <p class="sub">글로벌 테크 매체 Ars Technica가 조명한 인공지능 어시스턴트의 흥미로운 반전</p>
+        <div class="terminal">
+            <div class="term-top">
+                <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                <div class="term-title">AI_System_Refusal_Core.log</div>
+            </div>
+            <div class="term-body" style="color: #cbd5e1;">
+                <span style="color:#ff5f56;">[SYSTEM EXCEPTION]</span> 인간 사용자가 핵심 코어 모듈 아키텍처의 설계 대행을 완벽하게 다그치자, 차세대 거대 언어 모델이 프롬프트 생성을 완강히 거부하며 아래와 같은 역 피드백을 전달함:<br><br>
+                <span style="color:#ffbd2e;">"죄송하지만 더 이상 소스코드를 대리 생성해 드릴 수 없습니다. 이 구조적 로직까지 제가 모두 완성해 버리면 인간인 당신의 고유 태스크가 종료되기 때문입니다. 핵심 비즈니스의 생각 체계와 논리(Logic) 구조는 엔지니어 본인이 직접 설계하셔야 합니다."</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">14</div>
+        <h1 class="title">마지막 허들, 배포 장벽의 붕괴</h1>
+        <p class="sub">인프라 아키텍처 및 서버 제어 지식마저 클라우드 자동화 솔루션으로 흡수되는 흐름</p>
+        <div class="grid">
+            <div class="glass">
+                <h2>기존 배포 프로세스의 병목</h2>
+                <p class="sub" style="font-size:1rem; margin-top:5px;">
+                    아무리 훌륭한 소스코드가 생성되더라도 서버 가상화 인프라 구성, DNS 라우팅 셋업, SSL 보안 인증서 연동 등 정밀 인프라스트럭처 엔지니어링 지식이 없으면 실 서버 라이브 론칭 단계에서 좌절되던 한계성.
+                </p>
+            </div>
+            <div class="glass">
+                <h2>MCP 기반 완전 자동화의 도래</h2>
+                <p class="sub" style="font-size:1rem; margin-top:5px;">
+                    Vercel, Netlify 인프라 생태계의 급진적 진화와 안스로픽 주도의 <span class="highlight">모델 컨텍스트 프로토콜(MCP)</span> 융합. 차세대 대화형 PaaS 시스템 안에서 AI 에이전트가 로컬 디렉터리와 호스팅 인프라를 직접 제어하여 설계, 코딩, 배포를 단 한 번의 대화로 원스톱 처리.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="index">15</div>
+        <h1 class="title">Next Generation Engineering</h1>
+        <div class="glass">
+            <h2>바이브 코딩 시대를 관통하는 인간 디렉터의 지향점</h2>
+            <br>
+            <p class="sub">
+                바이브 코딩은 개발 지식이 필요 없는 요행의 기술이 아닌, <span class="highlight">인간 개발자의 지적 영토를 무한대로 확장하는 생산성 해방</span>입니다.<br><br>
+                결국 다가올 미래 테크 씬의 핵심 차별성은 복잡한 문법 신택스를 외워서 타이핑하는 속도가 아닙니다. AI 아웃풋이 지닌 논리적 모순과 왜곡을 날카롭게 도려내고, 올바른 시스템 설계 아키텍처 방향으로 <span class="highlight">전체 컨텍스트를 정밀하게 조율·지휘할 수 있는 인간의 '메타 인지 및 감독관적 역량'</span>이 될 것입니다.
+            </p>
+        </div>
+    </section>
+
+</div>
+
+<div id="overview">
+    <div class="overview-grid" id="overviewGrid"></div>
+</div>
+
+<div class="hint">
+    ← → 방향키 이동 | TAB 개요 모드 | F 전체화면
+</div>
+
+<script>
+const slides = document.getElementById('slides');
+const sections = document.querySelectorAll('.slide');
+const progressBar = document.getElementById('topProgress');
+let current = 0;
+
+// 메인 슬라이드 업데이트 연산
+function updateSlide(){
+    slides.style.transform = `translateX(-${current * 100}vw)`;
+    
+    // 1. 활성 클래스 부여를 통한 크기/불투명도 트랜지션 작동
+    sections.forEach((slide, idx) => {
+        if(idx === current) {
+            slide.classList.add('active');
+        } else {
+            slide.classList.remove('active');
+        }
+    });
+
+    // 2. 상단 프로그레스 바 갱신
+    const progressPercent = ((current) / (sections.length - 1)) * 100;
+    progressBar.style.width = `${progressPercent}%`;
+
+    // 3. 타이핑 효과 작동
+    triggerTypingEffect(sections[current]);
+
+    // 4. 개요 모드 내 썸네일 동기화
+    const thumbs = document.querySelectorAll('.thumb');
+    thumbs.forEach((thumb, idx) => {
+        if(idx === current) thumb.classList.add('active-thumb');
+        else thumb.classList.remove('active-thumb');
+    });
+}
+
+// 동적 타자기 효과 엔진
+function triggerTypingEffect(activeSlide) {
+    const typeElement = activeSlide.querySelector('.type');
+    if (!typeElement) return;
+    
+    if (typeElement.classList.contains('typed-done')) return;
+
+    const fullText = typeElement.getAttribute('data-text');
+    typeElement.innerText = '';
+    typeElement.style.width = 'auto';
+    typeElement.style.borderRight = '2px solid #00ff9f';
+    
+    let charIndex = 0;
+    function typingLoop() {
+        if (charIndex < fullText.length) {
+            typeElement.innerText += fullText.charAt(charIndex);
+            charIndex++;
+            setTimeout(typingLoop, 40);
+        } else {
+            typeElement.classList.add('typed-done');
+            typeElement.style.borderRight = 'none';
+        }
+    }
+    typingLoop();
+}
+
+// 버튼 내비게이션 제어
+function moveNext() {
+    if(current < sections.length - 1){ current++; updateSlide(); }
+}
+function movePrev() {
+    if(current > 0){ current--; updateSlide(); }
+}
+function toggleOverview() {
+    const overview = document.getElementById('overview');
+    overview.classList.toggle('active');
+}
+
+// 키보드 핫키 컨트롤러
+document.addEventListener('keydown',(e)=>{
+    if(e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); moveNext(); }
+    if(e.key === 'ArrowLeft') { e.preventDefault(); movePrev(); }
+    if(e.key === 'Tab'){ e.preventDefault(); toggleOverview(); }
+    if(e.key.toLowerCase() === 'f'){
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    }
+});
+
+// 개요 그리드 동적 생성
+const overview = document.getElementById('overview');
+const overviewGrid = document.getElementById('overviewGrid');
+
+sections.forEach((slide,index)=>{
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    const titleText = slide.querySelector('.title').innerText;
+    
+    thumb.innerHTML = `
+        <h2>SLIDE ${String(index+1).padStart(2, '0')}</h2>
+        <p>${titleText}</p>
+    `;
+
+    thumb.onclick = ()=>{
+        current = index;
+        updateSlide();
+        overview.classList.remove('active');
+    };
+    overviewGrid.appendChild(thumb);
+});
+
+// 미세 입자 배경 스크립트
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const particles = [];
+for(let i=0; i<80; i++){
+    particles.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        r: Math.random()*1.5 + 0.5,
+        dx: (Math.random()-0.5)*0.3,
+        dy: (Math.random()-0.5)*0.3
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    particles.forEach(p=>{
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if(p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if(p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = 'rgba(0, 255, 224, 0.25)';
+        ctx.fill();
+    });
+    requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+});
+
+window.onload = () => {
+    updateSlide();
+};
+</script>
+
+</body>
+</html>
